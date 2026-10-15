@@ -1,14 +1,13 @@
-#ifndef _GRAPHS_H_
-# define _GRAPHS_H_
+#ifndef GRAPHS_HEADER
+#define GRAPHS_HEADER
 
-# include <stddef.h>
+#include <stddef.h>
 
 /**
- * enum edge_type_e - Enumerates the different types of
- * connection between two vertices
+ * enum edge_type_e - Describes the types of connections between two vertices
  *
- * @UNIDIRECTIONAL: The connection is made only in one way
- * @BIDIRECTIONAL: The connection is made in two ways
+ * @UNIDIRECTIONAL: Connection in only one direction
+ * @BIDIRECTIONAL: Connection in both directions (two-way)
  */
 typedef enum edge_type_e
 {
@@ -16,149 +15,128 @@ typedef enum edge_type_e
 	BIDIRECTIONAL
 } edge_type_t;
 
-/* Define the structure temporarily for usage in the edge_t */
+/* Temporary forward declaration of vertex_t for usage in edge_t */
 typedef struct vertex_s vertex_t;
 
 /**
- * struct edge_s - Node in the linked list of edges for a given vertex
- * A single vertex can have many edges (connections)
+ * struct edge_s - Represents an edge in the adjacency list
+ * Each vertex can be connected to multiple other vertices (edges)
  *
- * @dest: Pointer to the connected vertex
- * @next: Pointer to the next edge
- * @weight: Weight of the edge (for weighted graphs)
+ * @dest: Pointer to the vertex this edge connects to
+ * @next: Pointer to the next edge in the list
+ * @weight: Weight of this edge (for weighted graphs)
  */
 typedef struct edge_s
 {
-	vertex_t	*dest;
-	struct edge_s	*next;
-	int		weight;
+	vertex_t *dest;
+	struct edge_s *next;
+	int weight;
 } edge_t;
 
-
 /**
- * struct vertex_s - Node in the linked list of vertices in the adjency list
+ * struct vertex_s - Represents a vertex in the adjacency list
  *
- * @index: Index of the vertex in the adjency list.
- *   When a new vertex is added, this index becomes the number of vertices
- *   in the adjency list before it is added.
- * @content: Custom data stored in the vertex (here, a string)
- * @x: Vertex X coordinate
- * @y: Vertex Y coordinate
- * @nb_edges: Number of conenctions with other vertices in the graph
- * @edges: Pointer to the head node of the linked list of edges
- * @next: Pointer to the next vertex in the adgency linked list
- *   This pointer points to another vertex in the graph, but it
- *   doesn't stand for an edge between the two vertices
+ * @index: The vertex's index in the adjacency list (assigned when added)
+ * @content: Custom data (here, it's a string)
+ * @x: X coordinate of the vertex
+ * @y: Y coordinate of the vertex
+ * @nb_edges: Number of edges (connections) this vertex has
+ * @edges: Pointer to the head of the linked list of edges for this vertex
+ * @next: Pointer to the next vertex in the list
+ *
+ * Note: @next only points to the next vertex in the list,
+ *       NOT to a connected vertex (that's what the edges are for).
  */
 struct vertex_s
 {
-	size_t		index;
-	char		*content;
-	int		x;
-	int		y;
-	size_t		nb_edges;
-	edge_t		*edges;
-	vertex_t	*next;
+	size_t index;
+	char *content;
+	int x;
+	int y;
+	size_t nb_edges;
+	edge_t *edges;
+	vertex_t *next;
 };
 
 /**
- * struct graph_s - Representation of a graph
- * We use an adjency linked list to represent our graph
- * All the vertices of the graph are stored in a singly linked list of
- * vertex_t, which head is pointed to by @vertices
- * Each vertex has a pointer @next that points to the next vertex in the list.
- * The @next pointer DOES NOT represent a connection between the two vertices.
- * To represent the connections between vertices, each vertex posess a singly
- * linked list of edge_t. Each edge structure represents a connection between
- * the vertex and the @dest member of the edge structure. The @next member of
- * an edge points to the next edge in the linked list of edges for a given
- * vertex.
- * Edges are unidirectional. It means that if we want to create a
- * bidirectionnal connection between two vertices A and B, we need to create
- * two edges: One in the vertex A's edges linked list, pointing to
- * the vertex B, and another one in the vertex B's edges linked list,
- * pointing to the vertex A.
+ * struct graph_s - The full graph represented as an adjacency list
+ * The graph is a linked list of vertices, where each vertex has its own
+ * linked list of edges.
  *
- * Here is a graphical representation of the adjency linked list:
+ * @nb_vertices: Number of vertices in the graph
+ * @vertices: Pointer to the head of the linked list of vertices
  *
+ * Graph visualization (vertices linked by @next, edges linked by @edges):
  *
  * @vertices
  *     |
- * ------------       ----------      ----------
- * | vertex_t |->edges| edge_t |->next| edge_t |->...
- * ------------       ----------      ----------
+ *  -----------      -----------      -----------
+ * | vertex_t | -> edges | edge_t | -> | edge_t | -> ...
+ *  -----------      -----------      -----------
  *     |
  *    next
- * ------------       ----------      ----------
- * | vertex_t |->edges| edge_t |->next| edge_t |->...
- * ------------       ----------      ----------
+ *  -----------      -----------      -----------
+ * | vertex_t | -> edges | edge_t | -> | edge_t | -> ...
+ *  -----------      -----------      -----------
  *     |
  *    next
- * ------------       ----------      ----------
- * | vertex_t |->edges| edge_t |->next| edge_t |->...
- * ------------       ----------      ----------
- *     |
- *    ...
- *
- * @nb_vertices: Number of vertices in our graph
- * @vertices: Pointer to the head node of our adjency linked list
+ *  ...
  */
 typedef struct graph_s
 {
-	size_t		nb_vertices;
-	vertex_t	*vertices;
+	size_t nb_vertices;
+	vertex_t *vertices;
 } graph_t;
-
 
 /*
  * FUNCTIONS
  */
 
 /**
- * graph_create - Initializes a graph structure
+ * graph_create - Initializes an empty graph structure
  *
- * Return: A pointer to the allocated structure, NULL on failure
+ * Return: Pointer to the newly created graph, or NULL on failure
  */
 graph_t *graph_create(void);
 
 /**
- * graph_add_vertex - Add a vertex in a graph
+ * graph_add_vertex - Adds a new vertex to the graph
  *
- * @graph: Pointer to the graph data structure
- * @str: String representing the new vertex
+ * @graph: Pointer to the graph structure
+ * @str: String content of the vertex
  * @x: X coordinate of the vertex
  * @y: Y coordinate of the vertex
  *
- * Return: A pointer to the created vertex, NULL on failure
+ * Return: Pointer to the created vertex, or NULL on failure
  */
 vertex_t *graph_add_vertex(graph_t *graph, char const *str, int x, int y);
 
 /**
- * graph_add_edge - Add an edge between two vertices
+ * graph_add_edge - Adds an edge between two vertices
  *
- * @graph: Pointer to the graph data structure
- * @src: String representing the vertex to make the connection from
- * @dest: String representing the vertex to connect to
- * @weight: Weight of the edge
- * @type: Connection type (Unidirectional or bidirectionnal)
+ * @graph: Pointer to the graph structure
+ * @src: Source vertex (string representing it)
+ * @dest: Destination vertex (string representing it)
+ * @weight: Weight of the edge (0 for unweighted)
+ * @type: Type of connection (Unidirectional or Bidirectional)
  *
  * Return: 1 on success, 0 on failure
  */
 int graph_add_edge(graph_t *graph, char const *src, char const *dest,
-	int weight, edge_type_t type);
+		   int weight, edge_type_t type);
 
 /**
- * graph_delete - Deallocates a graph
+ * graph_delete - Frees all the memory associated with the graph
  *
  * @graph: Pointer to the graph to be deleted
  */
 void graph_delete(graph_t *graph);
 
 /**
- * graph_display - Utility function to display the adjency linked list
+ * graph_display - Displays the graph in an adjacency list format
  *
- * @graph: Pointer to the graph structure to be displayed
+ * @graph: Pointer to the graph structure
  */
 void graph_display(graph_t const *graph);
 
-#endif /* !_GRAPHS_H_ */
+#endif
